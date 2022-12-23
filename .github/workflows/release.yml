@@ -20,7 +20,7 @@ jobs:
           node-version: 18
 
       - name: Cache Node Modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: node_modules
           key: ${{ runner.OS }}-npm-${{ hashFiles('**/package-lock.json') }}
@@ -38,29 +38,17 @@ jobs:
       - name: Get version
         id: version
         run: |
-          echo "::set-output name=version::$(npm -s run env echo '$npm_package_version')"
+          echo "echo version=$(npm run --silent version) >> $GITHUB_OUTPUT"
 
       - name: Compress
         run: |
           gzip dist/bundle.cjs
 
-      - name: Create release
-        uses: actions/create-release@v1
-        id: create_release
-        with:
-          draft: false
-          preRelease: false
-          release_name: ${{ steps.version.outputs.version }}
-          tag_name: ${{ github.ref }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-
       - name: Upload release
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/bundle.cjs.gz
-          asset_name: bundle.cjs.gz
-          asset_content_type: application/gzip
+          name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.sha }}
+          files: ./dist/bundle.cjs.gz
