@@ -23,50 +23,44 @@ jobs:
         uses: actions/cache@v2
         with:
           path: node_modules
-          key: ${{ runner.OS }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.OS }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-yarn-
+            ${{ runner.OS }}-npm-
 
-      - name: Yarn Install
+      - name: NPM Install
         run: |
-          yarn
+          npm install
 
       - name: Build
         run: |
-          yarn build
+          npm run build
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: dist
-          path: dist
-
-  commit-bundle:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check diff
-        uses: technote-space/get-diff-action@v6
-        with:
-          PATTERNS: |
-            **/*.(ts|js|json)
-
-      - name: Set up Repository
-        uses: actions/checkout@v2
-        with:
-          ref: bundle
-
-      - name: Download Bundle
-        uses: actions/download-artifact@v2
-        with:
-          name: dist
-          path: dist
-
-      - name: Commit and Push
+      - name: Get version
+        id: version
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add dist
-          git commit -m "chore: updated bundle"
-          git push origin HEAD --force
-        if: env.GIT_DIFF
+          echo "::set-output name=version::$(npm -s run env echo '$npm_package_version')"
+
+      - name: Compress
+        run: |
+          gzip dist/bundle.cjs
+
+      - name: Create release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          preRelease: false
+          release_name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/bundle.cjs.gz
+          asset_name: bundle.cjs.gz
+          asset_content_type: application/gzip
