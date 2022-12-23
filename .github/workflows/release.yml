@@ -37,8 +37,11 @@ jobs:
 
       - name: Get version
         id: version
-        run: |
-          echo "echo version=$(npm run --silent version) >> $GITHUB_OUTPUT"
+        run: echo version=$(npm run --silent version) >> $GITHUB_OUTPUT
+
+      - name: Get hash
+        id: hash
+        run: echo hash=$(git rev-parse --short ${{ github.sha }}) >> $GITHUB_OUTPUT
 
       - name: Compress
         run: |
@@ -49,6 +52,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          name: ${{ steps.version.outputs.version }}
-          tag_name: ${{ github.sha }}
+          name: ${{ steps.version.outputs.version }}-${{ steps.hash.outputs.hash }}
+          tag_name: ${{ steps.hash.outputs.hash }}
           files: ./dist/bundle.cjs.gz
