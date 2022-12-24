@@ -1,9 +1,11 @@
-import { getNewFeedItems } from '@/getNewFeedItems'
-import { getFeedUrlList } from '@/getFeedUrlList'
-import { addFeedItems } from '@/addFeedItems'
+import { addFeedItems } from '@/functions/addFeedItems'
+import { getFeedItemsList } from './functions/getFeedItemsList'
+import { getFeedUrlList } from './functions/getFeedUrlList'
+import { getNewFeedItems } from './functions/getNewFeedItems'
+import { reduceDuplicates } from './functions/reduceDuplicates'
 import dotenv from 'dotenv'
-import { getFeedItemsList } from './getFeedItemsList'
-import { reduceDuplicates } from './reduceDuplicates'
+import { purgeFeedItems } from './functions/purgeFeedItems'
+
 dotenv.config()
 
 async function index() {
@@ -21,6 +23,8 @@ async function index() {
       }
     }
   })
+
+  await purgeFeedItems(feedItems)
 }
 
 index()

@@ -1,7 +1,7 @@
-import { Client } from '@notionhq/client'
+import { getNotionClient } from '@/getNotionClient'
 
 export const getFeedUrlList = async (): Promise<string[]> => {
-  const notion = new Client({ auth: process.env.NOTION_KEY })
+  const notion = getNotionClient()
   const feederDatabaseId = process.env.NOTION_FEEDER_DATABASE_ID || ''
 
   const response = await notion.databases.query({
