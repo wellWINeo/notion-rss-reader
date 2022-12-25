@@ -1,6 +1,7 @@
 import { Client } from '@notionhq/client'
 import { CreatePageParameters } from '@notionhq/client/build/src/api-endpoints'
 import ogp from 'ogp-parser'
+import Parser from 'rss-parser'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TODO = any
@@ -13,8 +14,9 @@ export const addFeedItems = async (
   const notion = new Client({ auth: process.env.NOTION_KEY })
   const databaseId = process.env.NOTION_READER_DATABASE_ID || ''
 
-  newFeedItems.forEach(async (item) => {
-    const { title, link, enclosure, pubDate } = item
+  newFeedItems.forEach(async (item: Parser.Item) => {
+    console.log(item)
+    const { title, link, content, enclosure, isoDate } = item
     const domain = link?.match(/^https?:\/{2,}(.*?)(?:\/|\?|#|$)/)
 
     const properties: TODO = {
@@ -36,13 +38,9 @@ export const addFeedItems = async (
         },
       },
       'Created At': {
-        rich_text: [
-          {
-            text: {
-              content: pubDate,
-            },
-          },
-        ],
+        date: {
+          start: isoDate
+        }
       },
     }
 
@@ -53,31 +51,34 @@ export const addFeedItems = async (
         })
       : ''
 
-    const children: CreatePageParameters['children'] = enclosure
-      ? [
-          {
-            type: 'image',
-            image: {
-              type: 'external',
-              external: {
-                url: enclosure?.url,
-              },
-            },
-          },
-        ]
-      : ogpImage
-      ? [
-          {
-            type: 'image',
-            image: {
-              type: 'external',
-              external: {
-                url: ogpImage,
-              },
-            },
-          },
-        ]
-      : []
+    const children: CreatePageParameters['children'] = []
+
+    if (enclosure || ogpImage) {
+      children.push({
+        type: 'image',
+        image: {
+          type: 'external',
+          external: {
+            url: enclosure ? enclosure.url : ogpImage!
+          }
+        }
+      })
+    }
+
+    if (content) {
+      children.push({
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [
+            {
+              text: {
+                content: content
+              }
+            }
+          ]
+        }
+      })
+    }
 
     try {
       await notion.pages.create({

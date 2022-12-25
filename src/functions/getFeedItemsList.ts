@@ -13,7 +13,7 @@ export const getFeedItemsList = async (): Promise<FeedItem[]> => {
         return {
             id: e.id,
             url: e.properties.URL.url,
-            createdAt: new Date(e.properties['Created At'].rich_text[0].plain_text),
+            createdAt: new Date(e.properties['Created At'].date),
             read: e.properties.Read.checkbox,
             starred: e.properties.Starred.checkbox,
             title: e.properties.Title.title[0].text.content,
