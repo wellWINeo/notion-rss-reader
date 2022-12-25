@@ -1,7 +1,8 @@
 import { Client } from '@notionhq/client'
 import { CreatePageParameters } from '@notionhq/client/build/src/api-endpoints'
-import ogp from 'ogp-parser'
+import nmp from "node-meta-parser"
 import Parser from 'rss-parser'
+import axios from 'axios'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TODO = any
@@ -15,7 +16,7 @@ export const addFeedItems = async (
   const databaseId = process.env.NOTION_READER_DATABASE_ID || ''
 
   newFeedItems.forEach(async (item: Parser.Item) => {
-    console.log(item)
+    
     const { title, link, content, enclosure, isoDate } = item
     const domain = link?.match(/^https?:\/{2,}(.*?)(?:\/|\?|#|$)/)
 
@@ -34,7 +35,7 @@ export const addFeedItems = async (
       },
       Domain: {
         select: {
-          name: domain ? domain[1] : null,
+          name: domain ? domain.at(1) : null,
         },
       },
       'Created At': {
@@ -44,12 +45,8 @@ export const addFeedItems = async (
       },
     }
 
-    const ogpImage = link
-      ? await ogp(link).then((data) => {
-          const imageList = data.ogp['og:image']
-          return imageList ? imageList[0] : null
-        })
-      : ''
+    const { data: rawHtml } = await axios.get(link!)
+    const ogpImage = nmp.parseMetadata(rawHtml, ['og:image'])['og:image']
 
     const children: CreatePageParameters['children'] = []
 
