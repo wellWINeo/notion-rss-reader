@@ -45,7 +45,7 @@ export const addFeedItems = async (
       },
     }
 
-    const { data: rawHtml } = await axios.get(link!)
+    const { data: rawHtml } = await axios.get(link!, { headers: { "Accept-Encoding": "gzip,deflate,compress" } }) 
     const ogpImage = nmp.parseMetadata(rawHtml, ['og:image'])['og:image']
 
     const children: CreatePageParameters['children'] = []
