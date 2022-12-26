@@ -17,7 +17,7 @@ export const addFeedItems = async (
 
   newFeedItems.forEach(async (item: Parser.Item) => {
     
-    const { title, link, content, enclosure, isoDate } = item
+    const { title, link, contentSnippet, enclosure, isoDate } = item
     const domain = link?.match(/^https?:\/{2,}(.*?)(?:\/|\?|#|$)/)
 
     const properties: TODO = {
@@ -62,14 +62,14 @@ export const addFeedItems = async (
       })
     }
 
-    if (content) {
+    if (contentSnippet) {
       children.push({
         type: 'paragraph',
         paragraph: {
           rich_text: [
             {
               text: {
-                content: content
+                content: contentSnippet
               }
             }
           ]
