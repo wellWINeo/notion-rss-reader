@@ -1,5 +1,5 @@
 import { Client } from '@notionhq/client'
-import { CreatePageParameters } from '@notionhq/client/build/src/api-endpoints'
+import { BlockObjectRequest, CreatePageParameters } from '@notionhq/client/build/src/api-endpoints'
 import nmp from "node-meta-parser"
 import Parser from 'rss-parser'
 import axios from 'axios'
@@ -50,17 +50,10 @@ export const addFeedItems = async (
 
     const children: CreatePageParameters['children'] = []
 
-    if (enclosure || ogpImage) {
-      children.push({
-        type: 'image',
-        image: {
-          type: 'external',
-          external: {
-            url: enclosure ? enclosure.url : ogpImage!
-          }
-        }
-      })
-    }
+    if (enclosure?.url && validateImageUrl(enclosure.url))
+      children.push(getExternalImagePayload(enclosure.url))
+    else if (ogpImage && validateImageUrl(ogpImage))
+      children.push(getExternalImagePayload(ogpImage))
 
     if (contentSnippet) {
       children.push({
@@ -87,4 +80,22 @@ export const addFeedItems = async (
       console.error(error)
     }
   })
+}
+
+const validateImageUrl = (url: string) => {
+  const FORMATS = ['.png', '.jpg', '.jpeg', '.gif', '.tif', '.tiff', '.bmp', '.svg', '.heic']
+  const lowerUrl = url.toLocaleLowerCase()
+  return FORMATS.some(f => lowerUrl.endsWith(f))
+}
+
+const getExternalImagePayload = (url: string): BlockObjectRequest => {
+  return {
+    type: 'image',
+    image: {
+      type: 'external',
+      external: {
+        url: url
+      }
+    }
+  }
 }
