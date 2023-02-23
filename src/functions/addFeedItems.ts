@@ -7,6 +7,9 @@ import axios from 'axios'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TODO = any
 
+const CONTENT_MAX_LENGTH = 2000
+const ELLIPSIS = '...'
+
 export const addFeedItems = async (
   newFeedItems: {
     [key: string]: TODO
@@ -16,8 +19,9 @@ export const addFeedItems = async (
   const databaseId = process.env.NOTION_READER_DATABASE_ID || ''
 
   newFeedItems.forEach(async (item: Parser.Item) => {
-    
-    const { title, link, contentSnippet, enclosure, isoDate } = item
+
+    var { contentSnippet } = item
+    const { title, link, enclosure, isoDate } = item
     const domain = link?.match(/^https?:\/{2,}(.*?)(?:\/|\?|#|$)/)
 
     const properties: TODO = {
@@ -45,7 +49,7 @@ export const addFeedItems = async (
       },
     }
 
-    const { data: rawHtml } = await axios.get(link!, { headers: { "Accept-Encoding": "gzip,deflate,compress" } }) 
+    const { data: rawHtml } = await axios.get(link!, { headers: { "Accept-Encoding": "gzip,deflate,compress" } })
     const ogpImage = nmp.parseMetadata(rawHtml, ['og:image'])['og:image']
 
     const children: CreatePageParameters['children'] = []
@@ -55,7 +59,11 @@ export const addFeedItems = async (
     else if (ogpImage && validateImageUrl(ogpImage))
       children.push(getExternalImagePayload(ogpImage))
 
+
     if (contentSnippet) {
+      if (contentSnippet.length >= CONTENT_MAX_LENGTH) {
+        contentSnippet = contentSnippet.slice(0, CONTENT_MAX_LENGTH - ELLIPSIS.length) + ELLIPSIS;
+      }
       children.push({
         type: 'paragraph',
         paragraph: {
