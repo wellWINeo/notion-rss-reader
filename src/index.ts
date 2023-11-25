@@ -15,8 +15,8 @@ async function index() {
     if (feedUrl) {
       try {
         const rssItems = await getNewFeedItems(feedUrl)
-        
-        await addFeedItems(reduceDuplicates(rssItems, feedItems));
+
+        await addFeedItems(reduceDuplicates(rssItems, feedItems))
       } catch (error) {
         // TODO: Provide some kind of notification to the user.
         console.error(error)
@@ -27,4 +27,8 @@ async function index() {
   await purgeFeedItems(feedItems)
 }
 
-index()
+export const handler = async () => {
+  await index()
+
+  return { code: 200 }
+}

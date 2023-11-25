@@ -15,7 +15,8 @@
 		"lint:fix": "eslint --fix && npx prettier 'src/**/*.{js,ts,json}' --write",
 		"lint-staged": "lint-staged",
 		"prepare": "husky install",
-		"version": "node -p \"require('./package.json').version\""
+		"version": "node -p \"require('./package.json').version\"",
+		"zip": "zip archive.zip dist/bundle.cjs"
 	},
 	"devDependencies": {
 		"@notionhq/client": "^2.2.3",
